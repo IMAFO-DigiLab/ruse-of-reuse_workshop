@@ -1,0 +1,16 @@
+/queries/authors_without_dataset.sql
+/queries/dataset_extraction_query.sql
+/queries/dataset_extraction_query_with_names.sql
+/queries/extraction_from_anchor.sql
+/notebooks/augustinus_ai_pipeline_paragraph.ipynb
+/.data/xml_silver/
+/.data/vectorstores/
+/.data/preprocessed/
+/.data/raw/
+/.data/hackathon_data.zip
+/.data/
+/passim/
+/models/
+/data/
+/augustinus_data/
+/prompts/

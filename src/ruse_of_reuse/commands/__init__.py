@@ -1,0 +1,3 @@
+from ruse_of_reuse.commands.download import add_parser as add_download_parser
+from ruse_of_reuse.commands.preprocess import add_parser as add_preprocess_parser
+from ruse_of_reuse.commands.vectorstore import add_parser as add_vectorstore_parser
