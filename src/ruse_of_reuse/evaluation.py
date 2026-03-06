@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 import pandas as pd
 from tqdm.auto import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 def find_project_root(start: Optional[Path] = None) -> Path:
@@ -89,6 +92,7 @@ def flatten_prediction_pairs(predictions: Sequence[Dict[str, Any]]) -> set[tuple
 def score_predictions(
     predictions: Sequence[Dict[str, Any]],
     ground_truth_by_problem: Dict[str, Sequence[str]],
+    **kwargs
 ) -> Dict[str, float]:
     pred_pairs = flatten_prediction_pairs(predictions)
     true_pairs = flatten_truth_pairs(ground_truth_by_problem)
@@ -101,7 +105,7 @@ def score_predictions(
     recall = tp / (tp + fn) if (tp + fn) else 0.0
     f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
 
-    return {
+    result = {
         "true_positives": float(tp),
         "false_positives": float(fp),
         "false_negatives": float(fn),
@@ -109,6 +113,8 @@ def score_predictions(
         "recall": recall,
         "f1": f1,
     }
+
+    return result
 
 
 MethodFn = Callable[[str, str, Dict[str, Any]], List[Dict[str, Any]]]

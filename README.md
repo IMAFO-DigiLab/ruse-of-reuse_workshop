@@ -3,41 +3,30 @@
 Here you'll find everything you need to get started with the Ruse of Reuse hackathon, including data access, method development, and evaluation tools.
 
 ## Content
-- [Installation Local Development](#installation-local-development)
-- [Installation Google Colab](#installation-google-colab)
-- [Downloaded Data Structure](#downloaded-data-structure)
-- [Reproducing Ground Truth Construction](#reproducing-ground-truth-construction)
+- [Local installation](#local-installation)
+- [Google Colab installation](#google-colab-installation)
+- [Data Structure](#data-structure)
+- [Reproducing Preprocessing](#reproducing-preprocessing)
 - [Biblical Embedding Collections](#biblical-embedding-collections)
 - [Tweaking Your Method](#tweaking-your-method)
 
-## Installation Local Development
+## Local installation
 
 #### 1. Installation
-* Open your terminal and navigate to the project repository.
-* Install the package in editable mode by running:
+  ```bash
+  git clone git@github.com:IMAFO-DigiLab/ruse-of-reuse_workshop.git
+  ```
   ```bash
   python -m pip install -e .
   ```
 
-#### 2. Quick Start Pipeline
-Run the following commands in your terminal to initialize the project data.
-
+#### 2. Download the data
 * **Download Data:** Fetch the initial data bundle required for the project.
   ```bash
   python -m ruse_of_reuse download
   ```
-* **Rebuild Task Files (Optional):** Recreate the task files from the raw XML sources.
-  ```bash
-  python -m ruse_of_reuse preprocess
-  ```
-* **Build Embeddings (Optional):** Build additional biblical embedding collections using Hugging Face and OpenAI models. For more information see the "Biblical Embedding Collections" section below.
-  ```bash
-  python -m ruse_of_reuse vectorstore \
-    --hf-model bowphs/LaBerta \
-    --openai-model text-embedding-3-large
-  ```
 
-## Installation Google Colab
+##  Google Colab Installation
 #### 1. Import the Notebook
 * Go to the [repository link] and download the `notebooks/method_evaluation.ipynb` file to your computer.
 * Open [Google Colab](https://colab.research.google.com/).
@@ -64,49 +53,43 @@ The notebook requires access tokens to download the necessary models and dataset
 * Once the setup is complete, navigate to the top menu and select **Runtime > Run all** to execute the rest of the notebook.
 * Verify that all cells execute successfully. Once confirmed, you are ready to start tweaking the code!
 
-## Downloaded Data Structure
+## Data Structure
 After `python -m ruse_of_reuse download`, data is organized under `data/`:
 
 ```text
-data/
-  raw/                  # Source XML + mapping files + bible.tsv
-  task/                 # Competition-ready dataset
-    problems/*.txt      # Plain texts to solve
-    solutions/*.json    # Ground truth spans + resolved biblical references
-    preprocess_report.json
-    validation_preview.tsv
-    validation_preview.html
-  vectorstores/
-    chroma/             # ChromaDB with biblical verse embeddings
-      chroma.sqlite3
-      collection2model.json / biblical_collection_mapping.json
+ruse_of_reuse/
+├── data/                                # Should be downloaded
+│   ├── raw/
+│   ├── task/
+│   ├── vectorstores/
+│   ├── book_mapping.tsv
+│   ├── reference_mapping.json
+│   └── bible.tsv
+├── notebooks/
+│   ├── method_evaluation.ipynb          # This notebook
+│   └── ...
+└── src/                                 # Package code
+    ├── ruse_of_reuse/
+    └── ...
 ```
-
 `data/task` is the main folder for method development and evaluation.
 
-## Reproducing Ground Truth Construction
-`python -m ruse_of_reuse preprocess` creates `data/preprocessed/` from `data/raw/`.
+## Reproducing preprocessing
+### 1. [Optional] Reproducing data preprocessing
+* **Rebuild Task Files (Optional):** Recreate the task files from the raw XML sources.
+  ```bash
+  python -m ruse_of_reuse preprocess
+  ```
+### 2. [Optional] Re-building vectore stores
+Creates `data/task/` from `data/raw/`. `validation_preview.html` can be used for quick manual checks of extracted spans.
+* **Re-Build Vectorstore (Optional):** Build additional biblical embedding collections using Hugging Face and OpenAI models. For more information see the "Biblical Embedding Collections" section below.
+  ```bash
+  python -m ruse_of_reuse vectorstore \
+    --hf-model bowphs/LaBerta \
+    --openai-model text-embedding-3-large
+  ```
 
-- `data/preprocessed/problems` and `data/preprocessed/solutions` mirror the task format.
-- Use `validation_preview.html` for quick manual checks of extracted spans.
-
-## Biblical Embedding Collections
-Precomputed collections are provided in `data/vectorstores/chroma`.
-
-To add or rebuild collections:
-```bash
-python -m ruse_of_reuse vectorstore \
-  --hf-model bowphs/LaBerta \
-  --hf-model comma-project/modernbert-sentembeddings \
-  --openai-model text-embedding-3-large \
-  ç
-```
-
-Collection names include provider/model information, and model-to-collection mapping is saved to:
-- `data/vectorstores/chroma/collection2model.json` or
-- `data/vectorstores/chroma/biblical_collection_mapping.json`
-
-## Tweaking Your Method
+## Tweaking the baseline
 All tunable parameters are in the final two cells of `notebooks/method_evaluation.ipynb`.
 
 ### 1. Model / Provider Selection (`build_embedding_method_context`)
@@ -116,7 +99,10 @@ All tunable parameters are in the final two cells of `notebooks/method_evaluatio
 | `provider` | `"hf"`, `"openai"` | Embedding backend |
 | `model_name` | e.g. `"bowphs/LaBerta"`, `"text-embedding-3-large"` | Must match a precomputed Chroma collection |
 
-Available precomputed collections are listed in `data/vectorstores/chroma/biblical_collection_mapping.json`.
+Available precomputed collections of biblical verse embeddings:
+* bowphs/LaBerta
+* text-embedding-3-large
+* comma-project/modernbert-sentembeddings
 
 ### 2. Chunking & Retrieval (`participant_method` → `simple_embedding_method`)
 
@@ -131,14 +117,13 @@ Available precomputed collections are listed in `data/vectorstores/chroma/biblic
 | `top_k` | `5` | Bible verses retrieved per chunk |
 | `similarity_threshold` | `0.825` | Minimum cosine similarity to accept a verse — **most impactful parameter** |
 
-**Suggested tuning order:**
-1. `similarity_threshold` — lower it to improve recall, raise it for precision
-2. `top_k` — more candidates per chunk increases recall at the cost of precision
-3. `mode` — `"sentence_window"` often outperforms single sentences for longer allusions
-4. Model — swap to a multilingual or domain-specific model if the language warrants it
+
+* `similarity_threshold` — lower it to improve recall, raise it for precision
+* `top_k` — more candidates per chunk increases recall at the cost of precision
+* `mode` — `"sentence_window"` often outperforms single sentences for longer allusions 
+* Model — swap to a multilingual or domain-specific model if the language warrants it
 
 ### 3. Fast Iteration Tip
-
 Use `max_problems=5` in `run_method_on_dataset` while tuning, then remove the limit for final scoring:
 
 ```python
