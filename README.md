@@ -2,29 +2,18 @@
 
 Here you'll find everything you need to get started with the Ruse of Reuse hackathon, including data access, method development, and evaluation tools.
 
-## Content
-- [Local installation](#local-installation)
-- [Google Colab installation](#google-colab-installation)
-- [Data Structure](#data-structure)
-- [Reproducing Preprocessing](#reproducing-preprocessing)
-- [Biblical Embedding Collections](#biblical-embedding-collections)
-- [Tweaking Your Method](#tweaking-your-method)
-
-## Local installation
-
+## Local Installation
 #### 1. Installation
-  ```bash
-  git clone git@github.com:IMAFO-DigiLab/ruse-of-reuse_workshop.git
-  ```
-  ```bash
-  python -m pip install -e .
-  ```
+```bash
+git clone git@github.com:IMAFO-DigiLab/ruse-of-reuse_workshop.git
+python -m pip install -e .
+```
 
 #### 2. Download the data
-* **Download Data:** Fetch the initial data bundle required for the project.
-  ```bash
-  python -m ruse_of_reuse download
-  ```
+To download all the data delivered with the task, run:
+```bash
+python -m ruse_of_reuse download
+```
 
 ##  Google Colab Installation
 #### 1. Import the Notebook
@@ -74,20 +63,28 @@ ruse_of_reuse/
 ```
 `data/task` is the main folder for method development and evaluation.
 
-## Reproducing preprocessing
-### 1. [Optional] Reproducing data preprocessing
-* **Rebuild Task Files (Optional):** Recreate the task files from the raw XML sources.
-  ```bash
-  python -m ruse_of_reuse preprocess
-  ```
-### 2. [Optional] Re-building vectore stores
-Creates `data/task/` from `data/raw/`. `validation_preview.html` can be used for quick manual checks of extracted spans.
-* **Re-Build Vectorstore (Optional):** Build additional biblical embedding collections using Hugging Face and OpenAI models. For more information see the "Biblical Embedding Collections" section below.
-  ```bash
-  python -m ruse_of_reuse vectorstore \
-    --hf-model bowphs/LaBerta \
-    --openai-model text-embedding-3-large
-  ```
+## [Optional] Reproducing data preprocessing
+Everything that is necessary for running baselines is already included into the downloaded data. 
+However, you can task data from raw XML files:
+```bash
+python -m ruse_of_reuse preprocess
+```
+This will create `data/task/` from `data/raw/`.  
+`validation_preview.html` can be used for quick manual checks of extracted spans.
+
+### [Optional] Re-building vectore stores
+The task data is delivered with a vector store containing three collections each providing vectors for all verses of the Bible by three models:
+* bowphs/LaBerta
+* text-embedding-3-large
+* comma-project/modernbert-sentembeddings
+
+However, you can re-create them or produce more collections using some other models.
+```bash
+python -m ruse_of_reuse vectorstore \
+  --hf-model some-huggingface-model \
+  --openai-model text-embedding-3-small
+```
+This will create two additional collections with Bible verse embeddings by `some-huggingface-model` and `text-embedding-3-small`.
 
 ## Tweaking the baseline
 All tunable parameters are in the final two cells of `notebooks/method_evaluation.ipynb`.
@@ -123,15 +120,5 @@ Available precomputed collections of biblical verse embeddings:
 * `mode` — `"sentence_window"` often outperforms single sentences for longer allusions 
 * Model — swap to a multilingual or domain-specific model if the language warrants it
 
-### 3. Fast Iteration Tip
-Use `max_problems=5` in `run_method_on_dataset` while tuning, then remove the limit for final scoring:
-
-```python
-predictions = run_method_on_dataset(
-    participant_method,
-    problems,
-    model_context,
-    max_problems=5,   # remove this line for full evaluation
-    show_progress=True,
-)
-```
+### 3. Fast dev runs
+Use `max_problems=5` in `run_method_on_dataset` while tuning, then remove the limit for final scoring.
